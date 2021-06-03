@@ -20,5 +20,3 @@ Task: Implement a Promo code API with the following features:
 
 ## Assumptions in this solution.
 - No currency or related items is being implemented
-
-[]: https://travis-ci.org/laravel/lumen-framework
