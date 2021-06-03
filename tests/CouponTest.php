@@ -263,7 +263,7 @@ class CouponTest extends TestCase
      * @return void
      */
 
-    public function test_it_cannot_apply_a_venue_outside_venue_radius_coupon()
+    public function test_it_cannot_apply_a_coupon_outside_venue_radius()
     {
         $coupon = [
             'code' => 'KEN93',
@@ -287,7 +287,7 @@ class CouponTest extends TestCase
      * @return void
      */
 
-    public function test_it_cannot_apply_a_venue_inside_venue_radius_coupon()
+    public function test_it_can_apply_a_coupon_inside_venue_radius()
     {
         $coupon = [
             'code' => 'KEN93',
