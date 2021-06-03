@@ -1,7 +1,5 @@
 # Built with Lumen PHP Framework
-
-[![Build Status](https://travis-ci.org/laravel/lumen-framework.svg)](https://travis-ci.org/laravel/lumen-framework)
-
+[![Build Status](https://github.com/griffins/miniature-octo-waffle/actions/workflows/php.yml/badge.svg)](https://github.com/griffins/miniature-octo-waffle/actions/workflows/php.yml)
 ## THE CHALLENGE
 Intro: We want to give out promo codes worth x amount during events so people can get
 free rides to and from the event. The flaw with that is people can use the promo codes without
@@ -22,3 +20,5 @@ Task: Implement a Promo code API with the following features:
 
 ## Assumptions in this solution.
 - No currency or related items is being implemented
+
+[]: https://travis-ci.org/laravel/lumen-framework
