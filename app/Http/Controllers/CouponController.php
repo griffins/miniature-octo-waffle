@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Coupon;
+use App\Services\Polyline;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class CouponController extends Controller
@@ -20,9 +22,9 @@ class CouponController extends Controller
             ->paginate();
     }
 
-    public function store()
+    public function store(Request $request)
     {
-        $this->validate(request(), [
+        $this->validate($request, [
             'code' => 'required|alphanum|unique:coupons',
             'description' => 'required',
             'amount' => 'numeric',
@@ -33,16 +35,16 @@ class CouponController extends Controller
             'validTo' => 'date',
             'validFrom' => 'date'
         ]);
-        return Coupon::query()->create(request()->only(['code', 'description', 'amount', 'lat', 'lng', 'radius', 'status','validTo','validFrom']));
+        return Coupon::query()->create(request()->only(['code', 'description', 'amount', 'lat', 'lng', 'radius', 'status', 'validTo', 'validFrom']));
     }
 
-    public function update()
+    public function update(Request $request)
     {
-        $this->validate(request(), [
+        $this->validate($request, [
             'code' => [
                 'required',
                 'alphanum',
-                Rule::unique('coupons')->ignore(request('id'))
+                Rule::unique('coupons')->ignore($request->id)
             ],
             'description' => 'required',
             'amount' => 'numeric',
@@ -51,12 +53,12 @@ class CouponController extends Controller
             'radius' => 'required_with:lat,lng',
             'status' => 'in:active,in-active'
         ]);
-        return Coupon::query()->findOrFail(request('id'))->update(request()->only(['code', 'description', 'amount', 'lat', 'lng', 'radius', 'status']));
+        return Coupon::query()->findOrFail(request('id'))->update($request->only(['code', 'description', 'amount', 'lat', 'lng', 'radius', 'status']));
     }
 
-    public function deactivate()
+    public function deactivate(Request $request)
     {
-        $coupon = Coupon::query()->findOrFail(request('id'));
+        $coupon = Coupon::query()->findOrFail($request->id);
         $coupon->status = 'in-active';
         $coupon->save();
         return $coupon;
@@ -65,13 +67,15 @@ class CouponController extends Controller
     /**
      * @throws \Exception
      */
-    public function apply()
+    public function apply(Polyline $maps, Request $request)
     {
         $this->validate(request(), [
             'destination' => 'required',
-            'pickup' => 'required',
+            'origin' => 'required',
             'code' => 'required'
         ]);
+
+        list($destination, $origin) = array_values($request->only('destination', 'origin'));
 
         $coupon = Coupon::query()->where(['code' => request('code')])->firstOrFail();
         if ($coupon->validFrom && Carbon::now()->lessThan($coupon->validFrom)) {
@@ -83,17 +87,25 @@ class CouponController extends Controller
                 if ($coupon->status === 'in-active') {
                     abort(422, "Coupon was de-activated");
                 } else {
-                    if ($coupon->radius && !$coupon->validForTrip(request('destination'), request( 'pickup'))) {
+                    if ($coupon->radius && !$coupon->validForTrip($destination, $origin)) {
                         abort(422, "Coupon can only be used to or from venue");
                     } else {
-                        return ['coupon' => $coupon, 'polyline' => []];
+                        try {
+                            return [
+                                'coupon' => $coupon,
+                                'polyline' => $maps->getPolyline($destination, $origin)
+                            ];
+                        } catch (\Throwable $t) {
+                            abort(400, $t->getMessage());
+                        }
                     }
                 }
             }
         }
     }
-    public function destroy()
+
+    public function destroy(Request $request)
     {
-        return Coupon::query()->findOrFail(request('id'))->delete();
+        return Coupon::query()->findOrFail($request->id)->delete();
     }
 }

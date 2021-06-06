@@ -7,6 +7,7 @@ use Laravel\Lumen\Testing\TestCase as BaseTestCase;
 abstract class TestCase extends BaseTestCase
 {
     public \Faker\Generator $faker;
+
     /**
      * Creates the application.
      *
@@ -15,6 +16,6 @@ abstract class TestCase extends BaseTestCase
     public function createApplication()
     {
         $this->faker = Factory::create();
-        return require __DIR__.'/../bootstrap/app.php';
+        return require __DIR__ . '/../bootstrap/app.php';
     }
 }

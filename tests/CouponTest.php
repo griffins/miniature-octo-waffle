@@ -1,13 +1,25 @@
 <?php
 
-use App\Models\Coupon;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Str;
 use Laravel\Lumen\Testing\DatabaseMigrations;
 
 class CouponTest extends TestCase
 {
     use DatabaseMigrations;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $mock = Mockery::spy(\App\Services\Polyline::class);
+        $mock->shouldReceive('getPolyline')->andReturn(
+            [
+                [-1, 1], [23, 25]
+            ]
+        );
+        $this->app->instance(
+            \App\Services\Polyline::class, $mock
+        );
+    }
 
     /**
      * Basic sanity test of system.
@@ -36,6 +48,27 @@ class CouponTest extends TestCase
         $res = $this->json('post', '/coupon', $coupon);
         $this->assertResponseOk();
         $res->seeInDatabase('coupons', $coupon);
+    }
+
+    /**
+     * Test whether we can delete a coupon.
+     *
+     * @return void
+     */
+    public function test_it_can_delete_a_coupon()
+    {
+        $coupon = [
+            'code' => 'KEN936',
+            'description' => $this->faker->paragraph,
+            'amount' => "500"
+        ];
+        $res = $this->json('post', '/coupon', $coupon);
+        $id = json_decode($res->response->getContent())->id;
+        $this->assertResponseOk();
+        $res->seeInDatabase('coupons', $coupon);
+        $this->json('delete', "/coupon/{$id}");
+        $this->assertResponseOk();
+        $res->notSeeInDatabase('coupons', $coupon);
     }
 
     /**
@@ -208,7 +241,7 @@ class CouponTest extends TestCase
         $res = $this->json('post', '/coupon', $coupon);
         $this->assertResponseOk();
         $res->seeInDatabase('coupons', $coupon);
-        $details = ['code' => $coupon['code'], 'destination' => ['lat' => 12, 'lng' => 34], 'pickup' => ['lat' => 12, 'lng' => 45]];
+        $details = ['code' => $coupon['code'], 'destination' => ['lat' => 12, 'lng' => 34], 'origin' => ['lat' => 12, 'lng' => 45]];
         $res = $this->json('post', '/coupon/apply', $details);
         $res->assertResponseStatus(422);
     }
@@ -230,7 +263,7 @@ class CouponTest extends TestCase
 
         $res = $this->json('post', '/coupon', $coupon);
         $res->assertResponseOk();
-        $details = ['code' => $coupon['code'], 'destination' => ['lat' => 12, 'lng' => 34], 'pickup' => ['lat' => 12, 'lng' => 45]];
+        $details = ['code' => $coupon['code'], 'destination' => ['lat' => 12, 'lng' => 34], 'origin' => ['lat' => 12, 'lng' => 45]];
         $res = $this->json('post', '/coupon/apply', $details);
         $res->assertResponseStatus(422);
     }
@@ -252,7 +285,7 @@ class CouponTest extends TestCase
 
         $res = $this->json('post', '/coupon', $coupon);
         $res->assertResponseOk();
-        $details = ['code' => $coupon['code'], 'destination' => ['lat' => 12, 'lng' => 34], 'pickup' => ['lat' => 12, 'lng' => 45]];
+        $details = ['code' => $coupon['code'], 'destination' => ['lat' => 12, 'lng' => 34], 'origin' => ['lat' => 12, 'lng' => 45]];
         $res = $this->json('post', '/coupon/apply', $details);
         $res->assertResponseStatus(422);
     }
@@ -276,7 +309,7 @@ class CouponTest extends TestCase
 
         $res = $this->json('post', '/coupon', $coupon);
         $res->assertResponseOk();
-        $details = ['code' => $coupon['code'], 'destination' => ['lat' => 12, 'lng' => 34], 'pickup' => ['lat' => 12.56, 'lng' => 45.90]];
+        $details = ['code' => $coupon['code'], 'destination' => ['lat' => 12, 'lng' => 34], 'origin' => ['lat' => 12.56, 'lng' => 45.90]];
         $res = $this->json('post', '/coupon/apply', $details);
         $res->assertResponseStatus(422);
     }
@@ -300,7 +333,7 @@ class CouponTest extends TestCase
 
         $res = $this->json('post', '/coupon', $coupon);
         $res->assertResponseOk();
-        $details = ['code' => $coupon['code'], 'destination' => ['lat' => -1.232535, 'lng' => 36.878240], 'pickup' => ['lat' => -1.438611, 'lng' => 36.777378]];
+        $details = ['code' => $coupon['code'], 'destination' => ['lat' => -1.232535, 'lng' => 36.878240], 'origin' => ['lat' => -1.438611, 'lng' => 36.777378]];
         $res = $this->json('post', '/coupon/apply', $details);
         $res->assertResponseStatus(200);
         $this->seeJsonContains($coupon);
