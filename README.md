@@ -32,7 +32,7 @@ Task: Implement a Promo code API with the following features:
 - Run ```composer install``` to the dependencies
 - Copy ```.env.example``` to ```.env``` and add configurations in the .env, at-least database info. 
 - Run migrations with ```php artisan migrate```
-- Run ```php -S localhost:5000 -t public```
+- To start the server run ```php -S localhost:5000 -t public```
 
 ## Run tests
 - ```XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-text```
